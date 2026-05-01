@@ -1,0 +1,12 @@
+# Secrets - never commit
+secrets.ps1
+*.cred
+*.key
+
+# VS Code
+.vscode/
+
+# PowerShell temp
+*.pssproj
+Thumbs.db
+desktop.ini
