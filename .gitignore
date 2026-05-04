@@ -10,3 +10,6 @@ secrets.ps1
 *.pssproj
 Thumbs.db
 desktop.ini
+
+# Temporary migration staging - not for remote
+migrated/
