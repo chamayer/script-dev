@@ -1,17 +1,21 @@
 $sentinelCtl = Get-ChildItem 'C:\Program Files\SentinelOne' -Recurse -Filter 'sentinelctl.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
 
 if (-not $sentinelCtl) {
-    Write-Host 'sentinelctl.exe not found'
+    Write-Output 'sentinelctl.exe not found'
     exit 1
 }
+
+Write-Output "Found sentinelctl.exe at $($sentinelCtl.FullName)"
 
 $output = & $sentinelCtl.FullName configure 2>&1
 $mgmtServer = ($output | Select-String 'server\.mgmtServer\s+(\S+)').Matches.Groups[1].Value.Trim()
 
 if (-not $mgmtServer) {
-    Write-Host 'server.mgmtServer value not found in sentinelctl output'
+    Write-Output 'server.mgmtServer value not found in sentinelctl output'
     exit 1
 }
+
+Write-Output "Extracted mgmtServer: $mgmtServer"
 
 # Wait for Ninja property module to be ready
 $maxAttempts = 10
@@ -22,26 +26,30 @@ while ($attempt -lt $maxAttempts -and -not $moduleReady) {
     $attempt++
     try {
         $currentValue = Ninja-Property-Get s1server 2>&1
+        Write-Output "Current Value: $currentValue"
         $moduleReady = $true
     } catch {
-        Write-Host "Attempt $attempt - Ninja property module not ready, waiting 30 seconds..."
+        Write-Output "Attempt $attempt - Ninja property module not ready, waiting 30 seconds..."
         Start-Sleep -Seconds 30
     }
 }
 
 if (-not $moduleReady) {
-    Write-Host 'Ninja property module never became ready after $maxAttempts attempts'
+    Write-Output 'Ninja property module never became ready after $maxAttempts attempts'
     exit 1
 }
 
+Write-Output "Ninja property module is ready"
+
 # Only write if blank or different
 if ($currentValue -ne $mgmtServer) {
-    Write-Host "Updating s1server: '$currentValue' -> '$mgmtServer'"
+    Write-Output "Updating s1server: '$currentValue' -> '$mgmtServer'"
     Ninja-Property-Set s1server $mgmtServer
 } else {
-    Write-Host "s1server already correct: $mgmtServer"
+    Write-Output "s1server already correct: $mgmtServer"
 }
 
+Write-Output "Checking server URL for exit code"
 switch ($mgmtServer.TrimEnd('/')) {
     'https://usea1-amrose.sentinelone.net'    { exit 0 }
     'https://usea1-ninjaone2.sentinelone.net' { exit 99 }
