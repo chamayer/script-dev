@@ -4,4 +4,5 @@ $output = quser
 if ($LASTEXITCODE -eq 0) {
     $loggedInUsers = ($output | Select-Object -Skip 1).Count
 }
+Write-Output $loggedInUsers
 Ninja-Property-Set -Name loggedInUsers $loggedInUsers
