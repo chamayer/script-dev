@@ -8,7 +8,8 @@ if (-not $sentinelCtl) {
 Write-Output "Found sentinelctl.exe at $($sentinelCtl.FullName)"
 
 $output = & $sentinelCtl.FullName configure 2>&1
-$mgmtServer = ($output | Select-String 'server\.mgmtServer\s+(\S+)').Matches.Groups[1].Value.Trim()
+$match = $output | Select-String 'server\.mgmtServer\s+(\S+)'
+$mgmtServer = if ($match) { $match.Matches[0].Groups[1].Value.Trim() } else { $null }
 
 if (-not $mgmtServer) {
     Write-Output 'server.mgmtServer value not found in sentinelctl output'
