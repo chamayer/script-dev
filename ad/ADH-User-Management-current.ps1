@@ -1835,8 +1835,15 @@ function Set-OffboardUser {
         
         try {
             Write-Host "Saving Group Memberships for disabled user $username..." -ForegroundColor DarkYellow
-            Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute1 = $groupList }"
-            Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute1 = $groupList }  
+            $existingAttribute1 = (Get-ADUserBySamOrUpn -Identity $username -Properties extensionAttribute1).extensionAttribute1
+            if ($existingAttribute1) {
+                $groupList = "$existingAttribute1 | $groupList"
+                Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Replace @{extensionAttribute1 = $groupList }"
+                Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Replace @{extensionAttribute1 = $groupList }
+            } else {
+                Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute1 = $groupList }"
+                Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute1 = $groupList }
+            }
         }
         catch {
             Write-Host -f red "Encountered Error:"$($_.Exception.Message)            
@@ -1848,8 +1855,15 @@ function Set-OffboardUser {
             $originalDN = (Get-ADUserBySamOrUpn -Identity $username).DistinguishedName
             $originalOUPath = $originalDN -replace '^CN=[^,]+,', ''
             Write-Host "Saving original OU for $username..." -ForegroundColor DarkYellow
-            Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute2 = $originalOUPath}"
-            Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute2 = $originalOUPath}
+            $existingAttribute2 = (Get-ADUserBySamOrUpn -Identity $username -Properties extensionAttribute2).extensionAttribute2
+            if ($existingAttribute2) {
+                $originalOUPath = "$existingAttribute2 | $originalOUPath"
+                Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Replace @{extensionAttribute2 = $originalOUPath}"
+                Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Replace @{extensionAttribute2 = $originalOUPath}
+            } else {
+                Write-Log "Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute2 = $originalOUPath}"
+                Get-ADUserBySamOrUpn -Identity $username | Set-ADObject -Add @{extensionAttribute2 = $originalOUPath}
+            }
         }
         catch {
             Write-Host -f red "Encountered Error:"$($_.Exception.Message)
@@ -1871,7 +1885,6 @@ function Set-OffboardUser {
                 }
             }
         }
-
 
         try {
             Write-Host "Moving $username To Disabled Users OU..." -ForegroundColor DarkYellow
