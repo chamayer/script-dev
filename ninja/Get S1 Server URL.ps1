@@ -64,8 +64,13 @@ if ($currentValue -ne $mgmtServer) {
 }
 
 Write-Output "Checking server URL for exit code"
-switch ($mgmtServer.TrimEnd('/')) {
-    'https://usea1-amrose.sentinelone.net'    { exit 0 }
-    'https://usea1-ninjaone2.sentinelone.net' { exit 99 }
-    default                                   { exit 1 }
+if ($mgmtServer.TrimEnd('/') -eq 'https://usea1-amrose.sentinelone.net') {
+    exit 0
+} elseif ($mgmtServer.TrimEnd('/') -eq 'https://usea1-ninjaone2.sentinelone.net') {
+    exit 99
+} else {
+    exit 1
 }
+
+
+
