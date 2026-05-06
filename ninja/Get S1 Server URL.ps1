@@ -18,7 +18,20 @@ if (-not $mgmtServer) {
 
 Write-Output "Extracted mgmtServer: $mgmtServer"
 
-# Wait for Ninja property module to be ready
+$ninjaCli = 'C:\ProgramData\NinjaRMMAgent\ninjarmm-cli.exe'
+$useCliDirect = ($PSVersionTable.PSVersion.Major -lt 3) -or (-not (Get-Command 'Ninja-Property-Get' -ErrorAction SilentlyContinue))
+
+if ($useCliDirect) {
+    # PS 2.0 or module not available - use CLI directly
+    $currentValue = & $ninjaCli get s1server 2>&1
+    if ($currentValue -ne $mgmtServer) {
+        Write-Host "Updating s1server: '$currentValue' -> '$mgmtServer'"
+        & $ninjaCli set s1server $mgmtServer
+    } else {
+        Write-Host "s1server already correct: $mgmtServer"
+    }
+} else {
+    # PS 3.0+ - use PowerShell module with readiness check
 $maxAttempts = 10
 $attempt = 0
 $moduleReady = $false
