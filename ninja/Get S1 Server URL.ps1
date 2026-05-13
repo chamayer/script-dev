@@ -24,7 +24,9 @@ $useCliDirect = ($PSVersionTable.PSVersion.Major -lt 3) -or (-not (Get-Command '
 if ($useCliDirect) {
     # PS 2.0 or module not available - use CLI directly
     $currentValue = & $ninjaCli get s1server 2>&1
-    if ($currentValue -ne $mgmtServer) {
+    if ($currentValue.TrimEnd('/') -eq 'https://usea1-amrose.sentinelone.net') {
+        Write-Host "s1server is locked to amrose, skipping update (agent reports: $mgmtServer)"
+    } elseif ($currentValue -ne $mgmtServer) {
         Write-Host "Updating s1server: '$currentValue' -> '$mgmtServer'"
         & $ninjaCli set s1server $mgmtServer
     } else {
@@ -56,13 +58,15 @@ if (-not $moduleReady) {
 Write-Output "Ninja property module is ready"
 
 # Only write if blank or different
-if ($currentValue -ne $mgmtServer) {
+if ($currentValue.TrimEnd('/') -eq 'https://usea1-amrose.sentinelone.net') {
+    Write-Output "s1server is locked to amrose, skipping update (agent reports: $mgmtServer)"
+} elseif ($currentValue -ne $mgmtServer) {
     Write-Output "Updating s1server: '$currentValue' -> '$mgmtServer'"
     Ninja-Property-Set s1server $mgmtServer
 } else {
     Write-Output "s1server already correct: $mgmtServer"
 }
-
+}
 Write-Output "Checking server URL for exit code"
 if ($mgmtServer.TrimEnd('/') -eq 'https://usea1-amrose.sentinelone.net') {
     exit 0
@@ -71,6 +75,3 @@ if ($mgmtServer.TrimEnd('/') -eq 'https://usea1-amrose.sentinelone.net') {
 } else {
     exit 1
 }
-
-
-
